@@ -263,8 +263,8 @@ const planetNames = {
 };
 
 const START_TIME = 1706040313;
-const STATUS_API_URL = "https://api.live.prod.thehelldiversgame.com/api/warseason/801/status";
-const WARINFO_API_URL = "https://api.live.prod.thehelldiversgame.com/api/warseason/801/warinfo";
+const STATUS_API_URL = "https://helldiverstrainingmanual.com/api/v1/war/status";
+const WARINFO_API_URL = "https://helldiverstrainingmanual.com/api/v1/war/info";
 
 function getUnixEpochTimestamp() {
     return Math.floor(Date.now() / 1000);
@@ -628,4 +628,4 @@ document.getElementById('refresh').onclick = () => {
 window.onload = () => {
     const tz = parseInt(document.getElementById('tz').value) || 0;
     fetchAndPrintAll(tz);
-};
+}

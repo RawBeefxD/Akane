@@ -1,0 +1,86 @@
+body {
+  font-family: 'Fira Mono', 'Consolas', 'Menlo', 'Monaco', monospace;
+  background: #181818;
+  color: #eee;
+  margin: 0;
+  padding: 0;
+}
+
+h1 {
+  text-align: center;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  letter-spacing: 2px;
+}
+
+label, input, button {
+  font-size: 1em;
+}
+
+label {
+  display: block;
+  margin: 1em auto 0.5em auto;
+  text-align: center;
+}
+
+input[type="number"] {
+  width: 3em;
+  padding: 0.2em 0.4em;
+  background: #222;
+  color: #eee;
+  border: 1px solid #444;
+  border-radius: 3px;
+  margin-left: 0.5em;
+}
+
+button {
+  background: #333;
+  color: #eee;
+  border: 1px solid #555;
+  border-radius: 3px;
+  padding: 0.3em 1.2em;
+  margin-left: 1em;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+button:hover {
+  background: #444;
+}
+
+pre#output {
+  background: #222;
+  color: #eee;
+  padding: 1.2em;
+  margin: 2em auto;
+  border-radius: 8px;
+  max-width: 900px;
+  min-height: 400px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  box-shadow: 0 2px 16px #000a;
+  font-size: 1em;
+}
+
+/* Faction colors */
+.super-earth { color: #6ebbd3; font-weight: bold; }
+.terminid    { color: #ffb900; font-weight: bold; }
+.automaton   { color: #ff6263; font-weight: bold; }
+.illuminate  { color: #6b3aba; font-weight: bold; }
+
+/* Optional: highlight headings in output */
+pre#output strong, pre#output b {
+  color: #fff;
+  text-shadow: 0 0 2px #000;
+}
+
+/* Responsive tweaks */
+@media (max-width: 600px) {
+  pre#output {
+    font-size: 0.95em;
+    padding: 0.7em;
+    min-height: 200px;
+  }
+  h1 {
+    font-size: 1.2em;
+  }
+}

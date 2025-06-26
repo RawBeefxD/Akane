@@ -262,7 +262,7 @@ const planetNames = {
     "260": "CYBERSTAN"
 };
 
-const START_TIME = 1706040313;
+// const START_TIME = 1706040313; // Removed, now fetched from API
 const STATUS_API_URL = "https://helldiverstrainingmanual.com/api/v1/war/status";
 const WARINFO_API_URL = "https://helldiverstrainingmanual.com/api/v1/war/info";
 
@@ -275,10 +275,10 @@ function convertTimestampToTime(unixTimestamp) {
     return utc;
 }
 
-function getServerTimeOffset(apiData) {
+function getServerTimeOffset(apiData, serverStartTime) {
     const warTime = apiData.time || 0;
     if (warTime) {
-        return START_TIME + warTime;
+        return serverStartTime + warTime;
     } else {
         return null;
     }
@@ -307,7 +307,7 @@ function convertToLocalTime(unixTimestamp, serverStartTime, deviation, timezoneO
     return date.toISOString().replace('T', ' ').substring(0, 19);
 }
 
-function printGlobalEvents(apiData, deviation, timezoneOffset) {
+function printGlobalEvents(apiData, deviation, timezoneOffset, serverStartTime) {
     const globalEvents = apiData.globalEvents || [];
     if (globalEvents.length) {
         let html = '';
@@ -320,7 +320,7 @@ function printGlobalEvents(apiData, deviation, timezoneOffset) {
             const effectIds = event.effectIds || [];
             const planetIndices = event.planetIndices || [];
             const expireTime = event.expireTime || 0;
-            const expireLocalTime = convertToLocalTime(expireTime, START_TIME, deviation, timezoneOffset);
+            const expireLocalTime = convertToLocalTime(expireTime, serverStartTime, deviation, timezoneOffset);
             const effectIdsStr = effectIds.length ? effectIds.join(', ') : "None";
             const raceNames = {1: "Super Earth", 2: "Terminid", 3: "Automaton", 4: "Illuminate"};
             const raceName = raceNames[race] || "Unknown";
@@ -347,7 +347,7 @@ Expire Time: ${expireLocalTime}
     }
 }
 
-function printPlanetEvents(apiData, planetNames, deviation, timezoneOffset) {
+function printPlanetEvents(apiData, planetNames, deviation, timezoneOffset, serverStartTime) {
     const planetEvents = apiData.planetEvents || [];
     if (planetEvents.length) {
         let html = '';
@@ -362,8 +362,8 @@ function printPlanetEvents(apiData, planetNames, deviation, timezoneOffset) {
                 3: "Type 3",
                 4: "Type 4"
             }[eventType] || "Unknown";
-            const startTime = convertToLocalTime(event.startTime, START_TIME, deviation, timezoneOffset);
-            const expireTime = convertToLocalTime(event.expireTime, START_TIME, deviation, timezoneOffset);
+            const startTime = convertToLocalTime(event.startTime, serverStartTime, deviation, timezoneOffset);
+            const expireTime = convertToLocalTime(event.expireTime, serverStartTime, deviation, timezoneOffset);
             const currentHealth = event.health || 0;
             const maxHealth = event.maxHealth || 1300000;
             const liberationPercentage = ((maxHealth - currentHealth) / maxHealth) * 100;
@@ -473,7 +473,7 @@ function printPlanetDetails(apiData, planetNames, warinfoData) {
             const campaignTypeMap = {
                 0: "Liberation",
                 1: "Recon",
-                2: "High Priority Campaign",
+                2: "High Priority",
                 3: "3",
                 4: "Event"
             };
@@ -572,6 +572,14 @@ Availability Factor: ${availabilityFactor.toFixed(4)}
     return html;
 }
 
+function printImpactMultiplier(apiData) {
+    if (typeof apiData.impactMultiplier !== "undefined" && apiData.impactMultiplier !== null) {
+        return `<span style="color:#1fa9db">Impact Multiplier: ${apiData.impactMultiplier}</span><br><br>`;
+    } else {
+        return `<span style="color:#1fa9db">Impact Multiplier: Unknown</span><br><br>`;
+    }
+}
+
 async function fetchAndPrintAll(timezoneOffset) {
     const output = document.getElementById('output');
     output.innerHTML = "Fetching data...";
@@ -584,36 +592,42 @@ async function fetchAndPrintAll(timezoneOffset) {
         const apiData = await statusRes.json();
         const warinfoData = await warinfoRes.json();
 
+        // Get startDate from warinfoData
+        const serverStartTime = warinfoData.startDate;
+
         let html = "";
 
         // Metadata
         const utcTime = convertTimestampToTime(getUnixEpochTimestamp());
         const localTime = new Date((getUnixEpochTimestamp() + timezoneOffset * 3600) * 1000).toISOString().replace('T', ' ').substring(0, 19);
-        html += `UTC Time: ${utcTime}\n`;
-        html += `Local Time (UTC${timezoneOffset >= 0 ? '+' : ''}${timezoneOffset}): ${localTime}\n\n`;
+        html += `UTC Time: ${utcTime}<br>`;
+        html += `Local Time (UTC${timezoneOffset >= 0 ? '+' : ''}${timezoneOffset}): ${localTime}<br><br>`;
 
-        const serverTime = getServerTimeOffset(apiData);
+        const serverTime = getServerTimeOffset(apiData, serverStartTime);
         let deviation = 0;
         if (serverTime) {
             const [deviationStr, deviationVal] = calculateDeviation(serverTime);
             deviation = deviationVal;
-            html += `Deviation (RealTime - ServerTime): ${deviationStr} (${deviationVal} seconds)\n\n`;
+            html += `Deviation (RealTime - ServerTime): ${deviationStr} (${deviationVal} seconds)<br><br>`;
         }
 
-        html += "--- DSS/Space Station Data ---\n";
-        html += printDssHoveringPlanets(apiData.spaceStations || [], planetNames, apiData);
+        // Print Impact Multiplier below deviation
+        html += printImpactMultiplier(apiData);
 
-        html += "\n--- Global Events ---\n";
-        html += printGlobalEvents(apiData, deviation, timezoneOffset);
+        html += "--- DSS/Space Station Data ---<br>";
+        html += printDssHoveringPlanets(apiData.spaceStations || [], planetNames, apiData).replace(/\n/g, "<br>");
 
-        html += "\n--- Planet Details ---\n";
-        html += printPlanetDetails(apiData, planetNames, warinfoData);
+        html += "<br>--- Global Events ---<br>";
+        html += printGlobalEvents(apiData, deviation, timezoneOffset, serverStartTime).replace(/\n/g, "<br>");
 
-        html += "\n--- Planet Regions ---\n";
-        html += printPlanetRegions(apiData, planetNames, warinfoData, true);
+        html += "<br>--- Planet Details ---<br>";
+        html += printPlanetDetails(apiData, planetNames, warinfoData).replace(/\n/g, "<br>");
 
-        html += "\n--- Planet Events ---\n";
-        html += printPlanetEvents(apiData, planetNames, deviation, timezoneOffset);
+        html += "<br>--- Planet Regions ---<br>";
+        html += printPlanetRegions(apiData, planetNames, warinfoData, true).replace(/\n/g, "<br>");
+
+        html += "<br>--- Planet Events ---<br>";
+        html += printPlanetEvents(apiData, planetNames, deviation, timezoneOffset, serverStartTime).replace(/\n/g, "<br>");
 
         output.innerHTML = html;
     } catch (e) {

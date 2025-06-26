@@ -574,9 +574,9 @@ Availability Factor: ${availabilityFactor.toFixed(4)}
 
 function printImpactMultiplier(apiData) {
     if (typeof apiData.impactMultiplier !== "undefined" && apiData.impactMultiplier !== null) {
-        return `<span style="color:#1fa9db">Impact Multiplier: ${apiData.impactMultiplier}</span><br><br>`;
+        return `<span style="color:#5cfcfc">Impact Multiplier: ${apiData.impactMultiplier}</span><br><br>`;
     } else {
-        return `<span style="color:#1fa9db">Impact Multiplier: Unknown</span><br><br>`;
+        return `<span style="color:#5cfcfc">Impact Multiplier: Unknown</span><br><br>`;
     }
 }
 
